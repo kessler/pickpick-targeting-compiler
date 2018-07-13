@@ -22,6 +22,8 @@ module.exports = compile
 // '===' and other equality operators in jsep source code
 jsep.addBinaryOp('in', 6)
 jsep.addBinaryOp('match', 6)
+jsep.addBinaryOp('startsWith', 6)
+jsep.addBinaryOp('endsWith', 6)
 
 const defaultEnvironment = {
 	isNullOrUndefined,
@@ -80,6 +82,14 @@ function compile(expression, { matcherProperty = 'isMatch', userEnvironment = {}
 
 		if (node.operator === 'match') {
 			return `/${node.right.value}/g.test(${compileNode(node.left)})`
+		}
+
+		if (node.operator === 'startsWith') {
+			return `${compileNode(node.left)}.startsWith(${compileNode(node.right)})`
+		}
+
+		if (node.operator === 'endsWith') {
+			return `${compileNode(node.left)}.endsWith(${compileNode(node.right)})`
 		}
 
 		if (node.type === 'Identifier') {

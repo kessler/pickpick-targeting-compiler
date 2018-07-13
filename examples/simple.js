@@ -22,6 +22,14 @@ assert(isMatch({ geo: 'US' }))
 var { isMatch, features } = compile('geo in page')
 assert(isMatch({ geo: 'US', page: ["US", "MX"] }))
 
+// startsWith operator - same as String.startsWith(string)
+var { isMatch, features } = compile('geo startsWith "x"')
+assert(isMatch({ geo: 'xyz' }))
+
+// endsWith operator - same as String.endsWith(string)
+var { isMatch, features } = compile('geo endsWith "z"')
+assert(isMatch({ geo: 'xyz' }))
+
 // match operator for literal regular expressions, same as /regex/g.test('value')
 var { isMatch, features } = compile('geo match "[0-9]"')
 assert(isMatch({ geo: 0 }))

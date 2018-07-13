@@ -21,6 +21,18 @@ describe('compile', () => {
 			expect(isMatch({ page: 5 })).to.be.false
 		})
 
+		it('special "startsWith" operator facilitates the String.startsWith() functionality', () => {
+			let { isMatch } = compile('page startsWith "x"')
+			expect(isMatch({ page: 'x123' })).to.be.true
+			expect(isMatch({ page: 'y123' })).to.be.false
+		})
+
+		it('special "endsWith" operator facilitates the String.endsWith() functionality', () => {
+			let { isMatch } = compile('page endsWith "x"')
+			expect(isMatch({ page: '123x' })).to.be.true
+			expect(isMatch({ page: '123' })).to.be.false
+		})
+
 		it('special "match" operator facilitates literal regular expressions', () => {
 			let { isMatch } = compile('geo match "[0-9]"')
 			expect(isMatch({ geo: '0' })).to.be.true
