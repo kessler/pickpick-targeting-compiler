@@ -1,6 +1,6 @@
 # pickpick-targeting-compiler
 
-**compiles targeting expressions for pickpick engine**
+**compiles targeting expressions to javascript code for pickpick engine**
 
 ## example
 
