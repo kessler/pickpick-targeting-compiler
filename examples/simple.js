@@ -18,6 +18,10 @@ assert(isMatch({ geo: 'US', number: 8 }))
 var { isMatch, features } = compile('geo in ["US", "MX"]')
 assert(isMatch({ geo: 'US' }))
 
+// operators apply to context data as well
+var { isMatch, features } = compile('geo in page')
+assert(isMatch({ geo: 'US', page: ["US", "MX"] }))
+
 // match operator for literal regular expressions, same as /regex/g.test('value')
 var { isMatch, features } = compile('geo match "[0-9]"')
 assert(isMatch({ geo: 0 }))
@@ -37,3 +41,6 @@ assert(isMatch({ geo: 0 }))
 var { isMatch, features } = compile('isNumber(geo)')
 assert(isMatch({ geo: 0 }))
 
+// provide user defined functions and data
+var { isMatch, features } = compile('geo in user.x && user.isOk(page)', { x: [1, 2, 3], isOk: (arg) => arg.startsWith('x') })
+assert(isMatch({ geo: 1, page: 'x.html' }))
