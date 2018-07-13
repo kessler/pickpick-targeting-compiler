@@ -105,9 +105,10 @@ function compile(expression, { matcherProperty = 'isMatch', userEnvironment = {}
 				return inlineFunctions[functionName](node)
 			}
 
-			//throw new TypeError(`unsupported function ${functionName}`)
+			// if (!context.name.startsWith('user.')) {
+			// 	throw new TypeError(`unsupported function ${functionName}`)
+			// }
 
-			// return 
 			return `${functionName}(${node.arguments.map(compileNode).join(', ')})`
 		}
 

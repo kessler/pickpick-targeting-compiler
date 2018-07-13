@@ -49,38 +49,67 @@ describe('compile', () => {
 			})
 
 			describe.only('internal/default', () => {
-				it('isNullOrUndefined', () => {
-					let { isMatch } = compile('isNullOrUndefined(geo)')
-					expect(isMatch({ geo: null })).to.be.true
-					expect(isMatch({ geo: 'x' })).to.be.false
-				})
-
-				it('isString', () => {
-					let { isMatch } = compile('isString(geo)')
-					expect(isMatch({ geo: 'x' })).to.be.true
-					expect(isMatch({ geo: 0 })).to.be.false
-				})
-
-				it('isNumber', () => {
-					let { isMatch } = compile('isNumber(geo)')
-					expect(isMatch({ geo: 0 })).to.be.true
-					expect(isMatch({ geo: 'x' })).to.be.false
-				})
-
-				it('isArray', () => {
-					let { isMatch } = compile('isArray(geo)')
-					expect(isMatch({ geo: [1, 2, 3] })).to.be.true
-					expect(isMatch({ geo: 'x' })).to.be.false
-				})
-			})
-
-			it('allows the user to add scope and functionality via "userEnvironment" property', () => {
-				let userEnvironment = {
-					isOk: (page) => page.startsWith('x')
+				const functions = {
+					isNullOrUndefined: {
+						t: { geo: null },
+						f: { geo: 'x' }
+					},
+					isNull: {
+						t: { geo: null },
+						f: { geo: 'x' }
+					},
+					isUndefined: {
+						t: { geo: undefined },
+						f: { geo: 'x' }
+					},
+					isString: {
+						t: { geo: 'x' },
+						f: { geo: 1 }
+					},
+					isNumber: {
+						t: { geo: 1 },
+						f: { geo: 'x' }
+					},
+					isArray: {
+						t: { geo: [1, 2, 3] },
+						f: { geo: 'x' }
+					},
+					isObject: {
+						t: { geo: {} },
+						f: { geo: 'x' }
+					},
+					isBoolean: {
+						t: { geo: true },
+						f: { geo: 'x' }
+					},
+					isDate: {
+						t: { geo: new Date() },
+						f: { geo: 'x' }
+					},
+					isPrimitive: {
+						t: { geo: 123 },
+						f: { geo: {} }
+					}
 				}
 
-				let { isMatch } = compile('user.isOk(page)', { userEnvironment })
-				expect(isMatch({ page: 'xyz' })).to.be.true
+				for (let [fName, testData] of Object.entries(functions)) {
+					it(fName, () => {
+						let { isMatch } = compile(`${fName}(geo)`)
+						expect(isMatch(testData.t)).to.be.true
+						expect(isMatch(testData.f)).to.be.false
+					})
+				}
+			})
+
+			describe('allows the user to add scope and functionality via "userEnvironment" property', () => {
+				it.skip('user functions', () => {
+					let userEnvironment = {
+						isOk: (page) => page.startsWith('x')
+					}
+
+					let { isMatch } = compile('user.isOk(page)', { userEnvironment })
+					expect(isMatch({ page: 'xyz' })).to.be.true	
+				})				
 			})
 		})
 	})
