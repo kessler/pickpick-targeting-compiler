@@ -51,7 +51,8 @@ var { isMatch, features } = compile('isNumber(geo)')
 assert(isMatch({ geo: 0 }))
 
 // provide user defined functions and data
-var { isMatch, features } = compile('geo in user.x && user.isOk(page)', { x: [1, 2, 3], isOk: (arg) => arg.startsWith('x') })
+const userEnvironment = { x: [1, 2, 3], isOk: (arg) => arg.startsWith('x') }
+var { isMatch, features } = compile('geo in user.x && user.isOk(page)', { userEnvironment })
 assert(isMatch({ geo: 1, page: 'x.html' }))
 ```
 
