@@ -8,7 +8,7 @@
 
 ```js
 const assert = require('assert')
-const compile = require('../index')
+const compile = require('pickpick-targeting-compiler')
 
 // intentionally using var here 
 
