@@ -2,18 +2,13 @@ const debug = require('debug')('pickpick-targeting-compiler')
 const jsep = require('jsep')
 const vm = require('vm')
 const defaults = require('lodash.defaults')
+const { isFunction } = require('util')
 const {
-	isNullOrUndefined,
-	isNull,
-	isUndefined,
-	isString,
-	isNumber,
-	isArray,
-	isObject,
-	isBoolean,
-	isDate,
-	isPrimitive
-} = require('util')
+	DEFAULT_BUILTIN_FUNCTIONS,
+	DEFAULT_ENVIRONMENT,
+	USER_ENV_NAMESPACE,
+	INPUT_NAMESPACE
+} = require('./defaults.js')
 
 module.exports = compile
 
@@ -25,20 +20,16 @@ jsep.addBinaryOp('match', 6)
 jsep.addBinaryOp('startsWith', 6)
 jsep.addBinaryOp('endsWith', 6)
 
-const defaultEnvironment = {
-	isNullOrUndefined,
-	isNull,
-	isUndefined,
-	isString,
-	isNumber,
-	isArray,
-	isObject,
-	isBoolean,
-	isDate,
-	isPrimitive
-}
+const functionsWhitelist = generateFunctionsWhitelist()
+debug('functions whitelist', functionsWhitelist)
 
-function compile(expression, { matcherProperty = 'isMatch', userEnvironment = {} } = {}) {
+function compile(expression, {
+	matcherProperty = 'isMatch',
+	userEnvironment = {},
+	userEnvNamespace = USER_ENV_NAMESPACE,
+	inputNamespace = INPUT_NAMESPACE
+} = {}) {
+
 	if (matcherProperty === 'features') {
 		throw new TypeError('cannot use "features" as property name for matcher function')
 	}
@@ -49,7 +40,7 @@ function compile(expression, { matcherProperty = 'isMatch', userEnvironment = {}
 	const condition = compileNode(tree, features)
 	debug('condition', condition)
 
-	const sandbox = defaults({ _fn: false, user: userEnvironment }, defaultEnvironment)
+	const sandbox = defaults({ _fn: false, $: userEnvironment }, DEFAULT_ENVIRONMENT)
 	debug('sandbox', sandbox)
 
 	vm.createContext(sandbox)
@@ -68,8 +59,18 @@ function compile(expression, { matcherProperty = 'isMatch', userEnvironment = {}
 
 		debug('node', node)
 
+		if (!node) {
+			return
+		}
+
 		if (node.type === 'MemberExpression') {
-			return `${node.object.name}.${node.property.name}`
+			const member = `${compileNode(node.object)}.${node.property.name}`
+
+			if (member.startsWith(inputNamespace)) {
+				features.add(node.property.name)
+			}
+
+			return member
 		}
 
 		if (node.type === 'CallExpression') {
@@ -93,8 +94,7 @@ function compile(expression, { matcherProperty = 'isMatch', userEnvironment = {}
 		}
 
 		if (node.type === 'Identifier') {
-			features.add(node.name)
-			return `options.${node.name}`
+			return `${node.name}`
 		}
 
 		if (node.type === 'Literal') {
@@ -108,53 +108,31 @@ function compile(expression, { matcherProperty = 'isMatch', userEnvironment = {}
 		return `${compileNode(node.left)} ${node.operator} ${compileNode(node.right)}`
 	}
 
-	function handleCallExpression(node, context = { name: '' }) {
-		if (node.callee.type === 'Identifier') {
-			let functionName = node.callee.name
-			if (inlineFunctionNames.includes(functionName)) {
-				return inlineFunctions[functionName](node)
-			}
+	function handleCallExpression(node) {
+		// if (node.callee.type === 'Identifier') {
+		// 	let functionName = node.callee.name
+		// 	if (functionsWhitelist.includes(functionName)) {
+		// 		return `${functionName}(${node.arguments.map(compileNode).join(', ')})`
+		// 	}
 
-			// if (!context.name.startsWith('user.')) {
-			// 	throw new TypeError(`unsupported function ${functionName}`)
-			// }
+		// 	throw new TypeError(`unsupported function ${functionName}`)
+		// }
 
+		const functionName = compileNode(node.callee)
+		if (functionsWhitelist.includes(functionName) || functionName.startsWith('$')) {
 			return `${functionName}(${node.arguments.map(compileNode).join(', ')})`
 		}
 
-		console.log(node)
-		let next = compileNode(node.callee)
-		context.name += next
-		console.log(context)
-		handleCallExpression(next, context)
+		throw new TypeError(`unsupported function ${functionName}`)
+	}
+
+
+	function createVMCode(condition) {
+		return `_fn = (${inputNamespace}) => {
+	return Boolean(${condition})
+}`
 	}
 }
-
-const inlineFunctions = {
-	// isNaN: (node) => {
-	// 	ensureArgumentsLength('isNaN', node.arguments, 1)
-
-	// 	let arg = node.arguments[0]
-
-	// 	ensureNodeType('isNaN', 1, arg, 'Identifier')
-
-	// 	let argCode = `options.${arg.name}`
-	// 	return `isNaN(${argCode})`
-	// },
-
-	isDefined: (node) => {
-		ensureArgumentsLength('isDefined', node.arguments, 1)
-
-		let arg = node.arguments[0]
-
-		ensureNodeType('isDefined', 1, arg, 'Identifier')
-
-		let argCode = `options.${arg.name}`
-		return `${argCode} !== undefined && ${argCode} !== null`
-	}
-}
-
-const inlineFunctionNames = Object.keys(inlineFunctions)
 
 function toValueArray(element) {
 	return element.value
@@ -176,8 +154,13 @@ function ensureNodeType(fnName, position, node, type) {
 	}
 }
 
-function createVMCode(condition) {
-	return `_fn = (options) => {
-		return ${condition}
-}`
+function generateFunctionsWhitelist() {
+	let result = []
+	for (let key in DEFAULT_ENVIRONMENT) {
+		if (isFunction(DEFAULT_ENVIRONMENT[key])) {
+			result.push(key)
+		}
+	}
+
+	return result.concat(DEFAULT_BUILTIN_FUNCTIONS)
 }
