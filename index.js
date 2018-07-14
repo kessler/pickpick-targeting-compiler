@@ -159,22 +159,6 @@ function toValueArray(element) {
 	return element.value
 }
 
-function toNameArray(element) {
-	return element.name
-}
-
-function ensureArgumentsLength(fnName, args, length) {
-	if (args.length !== length) {
-		throw new TypeError(`${fnName}() accepts exactly ${length} argument(s)`)
-	}
-}
-
-function ensureNodeType(fnName, position, node, type) {
-	if (node.type !== type) {
-		throw new TypeError(`${fnName}() requires an argument of type "${type}" at position ${position}`)
-	}
-}
-
 function generateFunctionsWhitelist() {
 	let result = []
 	for (let key in DEFAULT_ENVIRONMENT) {
