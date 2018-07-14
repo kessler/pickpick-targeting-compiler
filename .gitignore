@@ -16,3 +16,4 @@ node_modules
 
 .yo-rc.json
 coverage
+.nyc_output
