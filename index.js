@@ -23,6 +23,36 @@ jsep.addBinaryOp('endsWith', 6)
 const functionsWhitelist = generateFunctionsWhitelist()
 debug('functions whitelist', functionsWhitelist)
 
+/**
+ *    Compile an expression into a resuable javascript function
+ *    
+ *    @param  {String} expression - any expression that can be parsed by [jsep](https://github.com/soney/jsep)
+ *    @param  {Object} options
+ *    @param  {String} options.matcherProperty - return the match function using a different property name in the compound return value, e.g: 
+ *
+ *    @example
+ *	 // options.matcherProperty
+ *	 
+ *    // normally this would be isMatch instead of 'foo'
+ *    let { foo } = compile('_.geo === "1"', { matcherProperty: 'foo' })
+ *      
+ *    @param  {Object} options.userEnvironment - allows the user to inject additional functionality that will be exposed to the expression. e.g:
+ *    
+ *    @example
+ *    // options.userEnvironment
+ *    
+ *    let userEnvironment = {
+ *  	    geos: ['MX', 'US', 'IL'],
+ *   	    format: value => value.toUpperCase()
+ *    }
+ *    
+ *    let { isMatch } = compile('$.format(_.geo) in $.geos', { userEnvironment })
+ *    
+ *    @param  {String} [options.userEnvNamespace=$] - change the name used to access user environment in an expression
+ *    @param  {String} [options.inputNamespace=_] - change the name used to access input in the expression
+ *    
+ *    @return {Function} a function that accepts input and returns a boolean value
+ */
 function compile(expression, {
 	matcherProperty = 'isMatch',
 	userEnvironment = {},
@@ -109,15 +139,6 @@ function compile(expression, {
 	}
 
 	function handleCallExpression(node) {
-		// if (node.callee.type === 'Identifier') {
-		// 	let functionName = node.callee.name
-		// 	if (functionsWhitelist.includes(functionName)) {
-		// 		return `${functionName}(${node.arguments.map(compileNode).join(', ')})`
-		// 	}
-
-		// 	throw new TypeError(`unsupported function ${functionName}`)
-		// }
-
 		const functionName = compileNode(node.callee)
 		if (functionsWhitelist.includes(functionName) || functionName.startsWith('$')) {
 			return `${functionName}(${node.arguments.map(compileNode).join(', ')})`
