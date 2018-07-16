@@ -1,6 +1,6 @@
 {
   "name": "pickpick-targeting-compiler",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "compiles targeting expressions for pickpick engine",
   "license": "MIT",
   "author": {
