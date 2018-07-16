@@ -54,6 +54,10 @@ assert(isMatch({ geo: 'xyz' }))
 var { isMatch, features } = compile('_.geo match "[0-9]"')
 assert(isMatch({ geo: 0 }))
 
+// deeplyEquals operator performs a deep equal comparison (uses [lodash.isEqual](https://lodash.com/docs/4.17.10#isEqual))
+var { isMatch, features } = compile('_.geo deeplyEquals [1, 2, 3]')
+assert(isMatch({ geo: [1, 2, 3] }))
+
 // exposes a bunch of isSomething from util:
 // isNullOrUndefined,
 // isNull,

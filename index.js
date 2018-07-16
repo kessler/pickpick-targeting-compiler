@@ -19,6 +19,7 @@ jsep.addBinaryOp('in', 6)
 jsep.addBinaryOp('match', 6)
 jsep.addBinaryOp('startsWith', 6)
 jsep.addBinaryOp('endsWith', 6)
+jsep.addBinaryOp('deeplyEquals', 6)
 
 const functionsWhitelist = generateFunctionsWhitelist()
 debug('functions whitelist', functionsWhitelist)
@@ -121,6 +122,10 @@ function compile(expression, {
 
 		if (node.operator === 'endsWith') {
 			return `${compileNode(node.left)}.endsWith(${compileNode(node.right)})`
+		}
+
+		if (node.operator === 'deeplyEquals') {
+			return `deeplyEquals(${compileNode(node.left)}, ${compileNode(node.right)})`
 		}
 
 		if (node.type === 'Identifier') {

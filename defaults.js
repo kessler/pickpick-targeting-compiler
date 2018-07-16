@@ -1,3 +1,5 @@
+const deeplyEquals = require('lodash.isequal')
+
 const {
 	isFunction,
 	isNullOrUndefined,
@@ -26,6 +28,7 @@ const DEFAULT_BUILTIN_FUNCTIONS = [
 ]
 
 const DEFAULT_ENVIRONMENT = {
+	deeplyEquals,
 	isNullOrUndefined,
 	isNull,
 	isUndefined,

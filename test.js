@@ -35,10 +35,16 @@ describe('compile', () => {
 			expect(isMatch({ page: '123' })).to.be.false
 		})
 
-		it('special "match" operator facilitates literal regular expressions', () => {
+		it('special "match" operator performs literal regular expressions test', () => {
 			let { isMatch } = compile('_.geo match "[0-9]"')
 			expect(isMatch({ geo: '0' })).to.be.true
 			expect(isMatch({ geo: 'x' })).to.be.false
+		})
+
+		it('special "deeplyEquals" operator performs deep equality', () => {
+			let { isMatch } = compile('_.geo deeplyEquals [1, 2, 3]')
+			expect(isMatch({ geo: [1, 2, 3] })).to.be.true
+			expect(isMatch({ geo: [1, 2] })).to.be.false
 		})
 
 		it('compound "geo !== \'US\' && page in [1, 2, 3]" expression', () => {
@@ -51,12 +57,12 @@ describe('compile', () => {
 			describe.skip('built in javascript functions', () => {
 				const functions = {
 					isNaN: {
-						t: { geo: 'z'},
-						f: { geo: '1'},
+						t: { geo: 'z' },
+						f: { geo: '1' },
 					},
 					encodeURI: {
-						t: { geo: 'z'},
-						f: { geo: '1'},
+						t: { geo: 'z' },
+						f: { geo: '1' },
 					}
 				}
 
@@ -72,8 +78,14 @@ describe('compile', () => {
 				})
 			})
 
-			describe('internal/default', () => {				
+			describe('internal/default', () => {
+				// t === truthy test, f === falsy test
+				// both tests must have the same input parameters
 				const functions = {
+					deeplyEquals: {
+						t: { geo: [1, 2, 3], page: [1, 2, 3] },
+						f: { geo: [1, 2, 3], page: [1, 2] }
+					},
 					isNullOrUndefined: {
 						t: { geo: null },
 						f: { geo: 'x' }
@@ -128,10 +140,11 @@ describe('compile', () => {
 						throw new Error(`missing test for function ${key}`)
 					}
 				}
-				
+
 				for (let [fName, testData] of Object.entries(functions)) {
 					it(fName, () => {
-						let { isMatch } = compile(`${fName}(_.geo)`)
+						let params = Object.keys(testData.t).map(key => `_.${key}`).join(',')
+						let { isMatch } = compile(`${fName}(${params})`)
 						expect(isMatch(testData.t)).to.be.true
 						expect(isMatch(testData.f)).to.be.false
 					})
@@ -145,9 +158,9 @@ describe('compile', () => {
 					}
 
 					let { isMatch } = compile('$.isOk(_.page)', { userEnvironment })
-					expect(isMatch({ page: 'xyz' })).to.be.true	
-					expect(isMatch({ page: 'zzz' })).to.be.false	
-				})				
+					expect(isMatch({ page: 'xyz' })).to.be.true
+					expect(isMatch({ page: 'zzz' })).to.be.false
+				})
 			})
 		})
 	})
