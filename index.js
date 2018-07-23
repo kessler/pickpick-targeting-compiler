@@ -109,7 +109,8 @@ function compile(expression, {
 		}
 
 		if (node.operator === 'in') {
-			return `${compileNode(node.right)}.includes(${compileNode(node.left)})`
+			let right = compileNode(node.right)
+			return `( (Array.isArray(${right}) || isString(${right})) && ${right}.includes(${compileNode(node.left)}))`
 		}
 
 		if (node.operator === 'match') {

@@ -23,6 +23,18 @@ describe('compile', () => {
 			expect(isMatch({ page: 5 })).to.be.false
 		})
 
+		it('special "in" operator facilitates the String.includes() functionality', () => {
+			let { isMatch } = compile('_.page in _.z')
+			expect(isMatch({ page: 1, z: '123' })).to.be.true
+			expect(isMatch({ page: 1, z: '456' })).to.be.false
+		})
+
+		it('special "in" will return false if the haystack is not an array or string', () => {
+			let { isMatch } = compile('_.page in _.z')
+			expect(isMatch({ page: 1 })).to.be.false
+			expect(isMatch({ page: 1, z: 1 })).to.be.false
+		})
+
 		it('special "startsWith" operator facilitates the String.startsWith() functionality', () => {
 			let { isMatch } = compile('_.page startsWith "x"')
 			expect(isMatch({ page: 'x123' })).to.be.true
